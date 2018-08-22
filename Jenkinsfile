@@ -1,46 +1,13 @@
 pipeline {
     agent any
-    
     tools {
         maven 'localMaven'
     }
-
-    parameters {
-         string(name: 'tomcat_dev', defaultValue: '18.191.221.88', description: 'Staging Server')
-         string(name: 'tomcat_prod', defaultValue: '18.188.135.34', description: 'Production Server')
-    }
-
-    triggers {
-         pollSCM('* * * * *')
-     }
-
-stages{
-        stage('Build'){
-            steps {
-                sh 'mvn clean package'
-            }
-            post {
-                success {
-                    echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
+        stages{
+            stage('Build'){
+                steps{
+                    sh 'mvn clean package'
                 }
             }
         }
-
-        stage ('Deployments'){
-            parallel{
-                stage ('Deploy to Staging'){
-                    steps {
-                        sh "scp -i /Users/pegueroe/courses/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_dev}:/var/lib/tomcat7/webapps"
-                    }
-                }
-
-                stage ("Deploy to Production"){
-                    steps {
-                        sh "scp -i /Users/pegueroe/courses/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_prod}:/var/lib/tomcat7/webapps"
-                    }
-                }
-            }
-        }
-    }
 }
